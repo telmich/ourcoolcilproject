@@ -42,15 +42,15 @@ if __name__ == '__main__':
         print("Random matrix OR select default value, not both")
         sys.exit(1)
 
-    if not (args.random_matrix or args.default_value):
+    if args.random_matrix == None and args.default_value == None:
         print("Specify either random matrix OR select a default value")
         sys.exit(1)
 
     shape = [args.matrix_rows, args.matrix_columns]
 
-    if args.random_matrix:
+    if not args.random_matrix == None:
         the_matrix = np.empty(shape)
-    if args.default_value:
+    if not args.default_value == None:
         the_matrix = np.ones(shape) * args.default_value
 
 
