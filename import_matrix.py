@@ -15,7 +15,8 @@ def lines_to_matrix(matrix, lines):
         column = int(parsed_line.group('column')) -1
         value = parsed_line.group('value')
 
-        matrix[column,row] = value
+        # We actually get a transposed
+        matrix[row, column] = value
 
     return matrix
 
@@ -30,9 +31,9 @@ if __name__ == '__main__':
                         help='Create matrix with random values', required=False)
 
     parser.add_argument('--matrix-rows', type=int,
-                        help='Rows for the matrix', required=False, default=1000)
+                        help='Rows for the matrix', required=False, default=10000)
     parser.add_argument('--matrix-columns', type=int,
-                        help='Columns for the matrix', required=False, default=10000)
+                        help='Columns for the matrix', required=False, default=1000)
 
     args = parser.parse_args()
 
