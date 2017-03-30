@@ -1,5 +1,12 @@
 import numpy as np
 
+# From exercise 5
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+import os,sys
+from PIL import Image
+
 
 def partial(x, row, column, U, Zt):
     """
@@ -33,6 +40,30 @@ def partial(x, row, column, U, Zt):
     b = 2 * Zt[column, row] * fx
 
     return a + b
+
+
+def ex5_load(dirname):
+    image_dir = "CroppedYale/"
+
+    files = os.listdir(image_dir)
+    n = len(files)
+    print("Loading " + str(n) + " images")
+
+    imgs = [Image.open(image_dir + files[i]) for i in range(n)]
+    # Assume all images have the same size
+    img0 = imgs[0]width, height = img0.size
+
+    # Compute input matrix X
+    X_list = [np.ravel(imgs[i].getdata()) for i in range(n)]
+    X = np.array(X_list, dtype=np.float32)
+    print(X.shape)
+
+
+def ex5_show(V):
+    new_images_stacked = np.reshape(V, (-1, width))
+    fig1 = plt.figure()
+    plt.imshow(new_images_stacked)
+
 
 if __name__ == '__main__':
 
