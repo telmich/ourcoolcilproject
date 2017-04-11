@@ -9,6 +9,7 @@ help: # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html <3
 
 solution: cooc  ## Solve the exercise :-)
 	@echo 'TODO :-)'
+	@echo "Last finished step: $<"
 
 vocab: data/vocab.pkl  ## [step 1, part 1] Construct the vocabulary: list of words appearing at least 5 times
 
