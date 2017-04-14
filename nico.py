@@ -1,4 +1,5 @@
 import random
+import time
 
 import numpy as np
 
@@ -8,6 +9,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os,sys
 from PIL import Image
+
+def matrix_standardization(matrix):
+    """ subtract mean and divide by standard deviation"""
+    for col in matrix.T:
+        mean = np.mean(col)
+        std  = np.std(col)
+
+        # zero std -> keep as is
+        if std == 0:
+            std = 1
+
+        col[...] = (col - mean) / std
 
 
 def partial(x, row, column, U, Zt):
@@ -54,6 +67,7 @@ def project_non_negative(matrix):
     for x in np.nditer(matrix, op_flags=['readwrite']):
         x[...] = max(0, x)
 
+    return matrix
 
 def random_non_negative_matrix(rows, columns, max_val=255):
     random.seed()
@@ -63,6 +77,8 @@ def random_non_negative_matrix(rows, columns, max_val=255):
     for x in np.nditer(matrix, op_flags=['readwrite']):
         x[...] = random.randint(0, max_val)
 
+    # print("random matrix: {}".format(matrix))
+    return matrix
 
 
 def ex5_load(image_dir):
@@ -72,11 +88,14 @@ def ex5_load(image_dir):
 
     imgs = [Image.open(image) for image in files]
 
+    print("Showing image 1")
     plt.show(imgs[0])
+    time.sleep(2)
 
     # Assume all images have the same size
     img0 = imgs[0]
     width, height = img0.size
+    print("Image size: {} {}".format(width, height))
 
     # Compute input matrix X: one vector per image
     X_list = [np.ravel(imgs[i].getdata()) for i in
@@ -89,21 +108,61 @@ def ex5_load(image_dir):
 
     return (X, width)
 
-def ex5_non_negative():
-    pass
+def ex5_non_negative_factorisation(U, V, X, steps):
+    for i in range(steps):
+        U = solve_for_all_columns(V, U, X)
+        V = solve_for_all_columns(U, V, X.T)
 
-def ex5_show(V, width):
-    new_images_stacked = np.reshape(V, (-1, width))
-    fig1 = plt.figure()
-    plt.show(new_images_stacked)
+    return (U, V)
+
+def solve_for_all_columns(U, V, X):
+    # iterating over a matrix iterates over rows
+    # however we want to iterate over columns,
+    # so we transpose
+    for idx, col in enumerate(X):
+        vj = solve_for_one_column(U, col)
+
+        # this looks correct when trying in the shell
+        V[:, idx] = vj
+
+    V = project_non_negative(V)
+    return V
+
+# X
+# ValueError: shapes (3,38) and (4080,) not aligned: 38 (dim 1) != 4080 (dim 0)
+
+# X.T
+# ValueError: shapes (3,4080) and (38,) not aligned: 4080 (dim 1) != 38 (dim 0)
+
+
+def solve_for_one_column(U, xcol):
+    """ highly improved version that omits information for calculation"""
+    A = np.dot(U, U.T)
+    b = np.dot(U, xcol)
+
+    x = np.linalg.solve(A, b)
+
+    return x
 
 
 def ex5(image_dir):
     X, width = ex5_load(image_dir)
 
-    # X_still_positive = project_non_negative(X)
+    rows, cols = X.shape
 
-    # ex5_show(X, width)
+    U = random_non_negative_matrix(3, rows)
+    V = random_non_negative_matrix(3, cols)
+
+    U, V = ex5_non_negative_factorisation(U, V, X, 20)
+
+    ex5_show(V, width)
+
+def ex5_show(V, width):
+    new_images_stacked = np.reshape(V, (-1, width))
+    print(new_images_stacked.shape)
+    fig1 = plt.figure()
+    plt.show(new_images_stacked)
+
 
 if __name__ == '__main__':
     # EX 4 test code
