@@ -10,8 +10,16 @@ import matplotlib.pyplot as plt
 import os,sys
 from PIL import Image
 
-def matrix_standardization(matrix):
-    """ subtract mean and divide by standard deviation"""
+################################################################################
+# EX1
+#
+def matrix_standardization_v1(matrix):
+    """
+    subtract mean and divide by standard deviation
+
+    Does not return anything, as the matrix itself is changed
+
+    """
     for col in matrix.T:
         mean = np.mean(col)
         std  = np.std(col)
@@ -22,6 +30,61 @@ def matrix_standardization(matrix):
 
         col[...] = (col - mean) / std
 
+
+def matrix_standardization_v2(matrix):
+    mean = np.mean(matrix, axis=0)
+    std = np.std(matrix, axis=0)
+
+    matrix = matrix - mean
+    matrix = matrix / std
+
+    return matrix
+
+def matrix_standardization_v3(matrix):
+    return (matrix - np.mean(matrix, axis=0)) / np.std(matrix, axis=0)
+
+
+def matrix_standardization(matrix):
+    return matrix_standardization_v3(matrix)
+
+
+def pairwise_distance(a, b):
+    """ return pairwise distances between two px2 and qx2 matrices"""
+
+    make_complex = np.array([1, 1j]).reshape(2,1)
+
+    a_complex = a.dot(make_complex)
+
+    # Turn into 2xq for broadcasting
+    b_complex = b.dot(make_complex).T
+
+    return np.absolute(a_complex - b_complex)
+
+
+def likelihood_data_sample(X, theta1, theta2):
+    """ X is matrix of Xi, columns"""
+
+    def formula(X, mu, sigma):
+        # Wrong, too lazy to type real evaluation
+
+        vec_len = X.shape[0]
+
+        return np.empty(vec_len)
+
+    res1 = formula(X, *theta1)
+    res2 = formula(X, *theta2)
+
+    res = res1 < res2
+
+    # False = 0, True = 1 => res1 > res2: False+1 = 1
+    return [int(x)+1 for x in res]
+
+################################################################################
+# EX 2
+
+
+################################################################################
+# EX foo
 
 def partial(x, row, column, U, Zt):
     """
