@@ -1,0 +1,7 @@
+# Note: this file is used as-is by `make clean`.
+# If you want to add stuff that should NOT be cleaned, put it into ../.gitignore
+# (or change that target).
+# Also: only put comments on their own lines here -- that script is dumb.
+
+data/*.pkl
+data/vocab*.txt
