@@ -43,9 +43,14 @@ def matrix_standardization_v2(matrix):
 def matrix_standardization_v3(matrix):
     return (matrix - np.mean(matrix, axis=0)) / np.std(matrix, axis=0)
 
+def matrix_normalization(matrix, axis=0):
+    return (matrix - np.mean(matrix, axis=axis))
+
+def matrix_standardization_v4(matrix, axis=0):
+    return matrix_normalization(matrix, axis=axis) / np.std(matrix, axis=axis)
 
 def matrix_standardization(matrix):
-    return matrix_standardization_v3(matrix)
+    return matrix_standardization_v4(matrix)
 
 
 def pairwise_distance(a, b):
@@ -82,6 +87,100 @@ def likelihood_data_sample(X, theta1, theta2):
 ################################################################################
 # EX 2
 
+def load_images_into_matrix(image_dir):
+    files = [ os.path.join(image_dir, image) for image in os.listdir(image_dir) ]
+
+    print("Loading {} images".format(len(files)))
+
+    imgs = [Image.open(image) for image in files]
+
+    # print("Showing image 1")
+    # plt.show(imgs[0])
+    # time.sleep(2)
+
+    # Assume all images have the same size
+    img0 = imgs[0]
+    width, height = img0.size
+    print("Image size: {} {}".format(width, height))
+
+    # Compute input matrix X: one vector per image
+    X_list = [np.ravel(imgs[i].getdata()) for i in
+              range(len(files))]
+
+    # Convert it to numpy input
+    X = np.array(X_list, dtype=np.float32)
+
+    # print(X.shape)
+
+    return (X, width)
+
+def covariance_matrix(matrix, axis=1):
+    n = matrix.shape[axis]
+    return (1/n) * (matrix.dot(matrix.T))
+
+def ex2(image_dir):
+    # 1. Build a matrix collecting all images as its columns
+    matrix, width = load_images_into_matrix(image_dir)
+    # 2. Normalize all images by subtracting the mean
+    normalized_matrix = matrix_normalization(matrix)
+
+    # 3. Perform PCA on the covariance matrix
+
+    # Both should work similar - np.cov takes 1/(n-1) afaik
+    # cov_mat = covariance_matrix(normalized_matrix)
+
+    # covariance
+    cov_mat = np.cov(normalized_matrix.T)
+    print(cov_mat.shape)
+
+    # eigenvalues + vectors
+    # Takes *very* long
+    #     eig_vals, eig_vecs = np.linalg.eig(cov_mat)
+
+    # Takes *very* long
+    # SVD instead of eigenvalue
+    u, s, v  = np.linalg.svd(cov_mat, full_matrices=True)
+
+    eig_vals = s
+    eig_vecs = u
+    print(u.shape)
+
+    # Check that the length of eigenvectors is almost 1
+    # Just for fun.
+    for ev in eig_vecs:
+        np.testing.assert_array_almost_equal(1.0, np.linalg.norm(ev))
+
+    # Make a list of (eigenvalue, eigenvector) tuples
+    eig_pairs = [(np.abs(eig_vals[i]), eig_vecs[:,i]) for i in range(len(eig_vals))]
+
+    # Sort the (eigenvalue, eigenvector) tuples from high to low
+    eig_pairs.sort(key=lambda x: x[0], reverse=True)
+
+    # Visually confirm that the list is correctly sorted by decreasing eigenvalues
+    print('Eigenvalues in descending order:')
+    for i in eig_pairs:
+        print(i[0])
+
+
+    # 4. Visualize the 5 first principal components.1 what is the interpretation of these images?
+    num_eigen_vectors = 5
+    used_eigen_vectors = [x[1] for x in eig_pairs[:num_eigen_vectors]]
+
+    projection_matrix = np.stack(used_eigen_vectors, axis=1)
+    print(projection_matrix.shape)
+
+    # project matrix
+    projected_matrix = matrix.dot(projection_matrix)
+
+    print(projected_matrix.shape)
+
+    # These are the top 5 eigenfaces (?)
+    for img in projected_matrix:
+        img_correct_shape = img.reshape(-1, width)
+        plt.imshow(img_correct_shape)
+        plt.show()
+
+    # NEXT TODO: compress one image and show
 
 ################################################################################
 # EX foo
@@ -144,32 +243,7 @@ def random_non_negative_matrix(rows, columns, max_val=255):
     return matrix
 
 
-def ex5_load(image_dir):
-    files = [ os.path.join(image_dir, image) for image in os.listdir(image_dir) ]
 
-    print("Loading {} images".format(len(files)))
-
-    imgs = [Image.open(image) for image in files]
-
-    print("Showing image 1")
-    plt.show(imgs[0])
-    time.sleep(2)
-
-    # Assume all images have the same size
-    img0 = imgs[0]
-    width, height = img0.size
-    print("Image size: {} {}".format(width, height))
-
-    # Compute input matrix X: one vector per image
-    X_list = [np.ravel(imgs[i].getdata()) for i in
-              range(len(files))]
-
-    # Convert it to numpy input
-    X = np.array(X_list, dtype=np.float32)
-
-    print(X.shape)
-
-    return (X, width)
 
 def ex5_non_negative_factorisation(U, V, X, steps):
     for i in range(steps):
@@ -209,7 +283,7 @@ def solve_for_one_column(U, xcol):
 
 
 def ex5(image_dir):
-    X, width = ex5_load(image_dir)
+    X, width = load_images_into_matrix(image_dir)
 
     rows, cols = X.shape
 
@@ -228,6 +302,11 @@ def ex5_show(V, width):
 
 
 if __name__ == '__main__':
+    image_dir = "/home/users/nico/eth/cil/lecture_cil_public/exercises/ex5/CroppedYale/CroppedYale"
+
+    # EX2
+    ex2(image_dir)
+
     # EX 4 test code
     # U = np.ones([3,4])
     # Zt = np.ones([4,2])
@@ -238,4 +317,4 @@ if __name__ == '__main__':
     # print("Res: {}".format(  partial(3, 1, 1, U, Zt)))
 
     # EX 5
-    ex5("/home/users/nico/eth/cil/lecture_cil_public/exercises/ex5/CroppedYale/CroppedYale")
+    # ex5(image_dir)
