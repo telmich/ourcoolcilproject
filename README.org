@@ -1,0 +1,4 @@
+* Hints:
+** Exercise 9 for baseline
+* URLS
+** Kaggle https://inclass.kaggle.com/c/cil-cosmology-2017
