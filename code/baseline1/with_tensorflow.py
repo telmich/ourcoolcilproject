@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+import os
+
+import tensorflow as tf
+
+import util
+
+DEFAULT_DATA_PATH = "../../cosmology_aux_data_170429"
+
+def stupid_linear(train_x, train_y, test_x, test_y):
+    """Model that tries to predict the similarity score as a linear combination of pixel values.
+
+    All pixel values.
+
+    If this works, I'll eat my socks.
+    """
+    x    = tf.placeholder(tf.uint8, [None, util.DOWNSAMPLED_SIZE])
+    y_in = tf.placeholder(tf.float32, [None, 1])
+    W    = tf.Variable(tf.zeros([util.DOWNSAMPLED_SIZE]))
+    b    = tf.Variable([0])  # TODO(kamila) if this is very different from 0, be surprised.
+    y    = tf.matmul(W, x) + b
+    loss = tf.reduce_mean(y - y_in)
+
+    train = optimizer.minimize(loss)
+
+    train_input_fn = tf.contrib.learn.io.numpy_input_fn({'x': x_train}, y_train, batch_size=100, num_epochs=1000)
+    features = [tf.contrib.layers.real_valued_column('x', dimension=util.DOWNSAMPLED_SIZE)]
+    estimator = tf.contrib.learn.LinearRegressor(feature_columns=features)
+    estimator.fit(input_fn=train_input_fn, steps=1000)
+    print(estimator.evaluate(input_fn=test_input_fn))
+
+
+def stupid_linear_exp():
+    ...
+
+
+
+if __name__ == "__main__":
+    data = os.environ.get("COSMOLOGY_DATA", DEFAULT_DATA_PATH).strip()
+    stupid_linear(*util.load_downsampled_train_test_images(data, 'scored'))
