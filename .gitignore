@@ -1,3 +1,7 @@
 venv/
+__pycache__/
+
 cosmology_aux_data_170429.zip
 cosmology_aux_data_170429/
+_cache/
+
