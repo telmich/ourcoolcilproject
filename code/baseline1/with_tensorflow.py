@@ -37,11 +37,12 @@ def stupid_linear(train_x, train_y, test_x, test_y):
 
     print(estimator.evaluate(input_fn=test_input_fn))
 
-    err = 0
+    err, cnt = 0, 0
     for (y, y_in) in zip(predictions, test_y):
         print(y, y_in)
         err += abs(y - y_in)
-    print('mean error', err/len(test_y))
+        cnt += 1
+    print('mean error', err/cnt)
 
 def stupid_linear_exp():
     ...
