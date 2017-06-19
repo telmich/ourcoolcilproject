@@ -1,6 +1,7 @@
 import base64
 import csv
 import functools
+import gc
 import random
 import os
 import os.path
@@ -8,9 +9,15 @@ import sys
 
 import numpy as np
 import PIL.Image
+import tensorflow as tf
 
 IMG_EXT=".png"
-TRAIN_RATIO       = 0.7
+
+TRAIN_RATIO = 0.7
+IMAGE_WIDTH = 1000
+IMAGE_SIZE  = IMAGE_WIDTH**2
+
+
 DOWNSAMPLED_WIDTH = 100  # pixels
 DOWNSAMPLED_SIZE  = DOWNSAMPLED_WIDTH**2
 
@@ -55,16 +62,38 @@ def image_ids(data_path, subset):
     return keys
 
 @functools.lru_cache()
-def load_image(data_path, subset, id, downsample_to=None):
+def load_image(data_path, subset, id, downsample_to=None, flatten=False):
     filename = os.path.join(data_path, subset, id+IMG_EXT)
     image = PIL.Image.open(filename)
     if downsample_to: image = image.resize((downsample_to, downsample_to), PIL.Image.ANTIALIAS)
-    return np.array(image.getdata()).reshape(image.size[0],image.size[1])
+    shape = image.size[0]*image.size[1] if flatten else (image.size[0],image.size[1])
+    return np.array(image.getdata()).reshape(shape)
 
-@functools.lru_cache()
+def enqueue_images(data_path, subset, queue, *args, **kwargs):
+    for img, label in image_labels_dict(data_path, subset).items():
+        q.enqueue((img, load_image(data_path, subset, img, *args, **kwargs), float(label)))
+
+# the following are DEPRECATED (I think)
+
+def images_stoch_input(data_path, subset, batch_size=100):
+    """Returns (train_input_fn, test_input_fn)."""
+    def input_fn(img_ids):
+        this_batch = random.sample(img_ids, batch_size)
+        pixels = [tf.convert_to_tensor(load_image(data_path, subset, id).reshape(IMAGE_SIZE)) for id in this_batch]
+        scores = [image_labels_dict(data_path, subset)[id] for id in this_batch]
+        return {'pixels': tf.convert_to_tensor(pixels)}, tf.convert_to_tensor(scores)
+
+    img_ids = image_ids(data_path, subset)
+    n_train = int(len(img_ids)*TRAIN_RATIO)
+    train_ids, test_ids = img_ids[:n_train], img_ids[n_train:]
+    return functools.partial(input_fn, train_ids), functools.partial(input_fn, test_ids)
+
 @on_disk_cache
 def load_downsampled_train_test_images(data_path, subset, downsample_to=DOWNSAMPLED_WIDTH):
-    """Returns (train_x, train_y, test_x, test_y) as numpy arrays. `subset` is "labeled" or "scored"."""
+    """Returns (train_x, train_y, test_x, test_y) as numpy arrays. `subset` is "labeled" or "scored".
+
+    DEPRECATED -- use images_stoch_input_fn.
+    """
     img_ids = image_ids(data_path, subset)
     N = len(img_ids)
 
@@ -82,4 +111,5 @@ def load_downsampled_train_test_images(data_path, subset, downsample_to=DOWNSAMP
         y[idx] = float(image_labels_dict(data_path, subset)[img_id])
     print()
 
+    gc.collect()
     return (train_x, train_y, test_x, test_y)
