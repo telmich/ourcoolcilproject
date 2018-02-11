@@ -1,4 +1,23 @@
 * Hints:
 ** Exercise 9 for baseline
+** 100 pictures to be generated
 * URLS
 ** Kaggle https://inclass.kaggle.com/c/cil-cosmology-2017
+** Microsoft https://cmt3.research.microsoft.com/CILETHZ2017
+* Ratings: Similarity score prediction (MAE)
+** 0.0: 1.71175
+** 1.0: 1.05129
+* Summary
+| Topic                                         | Location |
+|-----------------------------------------------+----------|
+| Data Clustering: match point to cluster       | 06p2     |
+| -> Cluster by similarity                      |          |
+| Vector Quantization                           | 06p6     |
+| Color Reduction by Vector Quantization        | 06p7     |
+| K-Means Algorithm: clustering as optimization | 06p8ff   |
+|                                               |          |
+|                                               |          |
+|                                               |          |
+|                                               |          |
+|                                               |          |
+|                                               |          |
